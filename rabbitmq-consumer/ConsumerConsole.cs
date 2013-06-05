@@ -12,19 +12,18 @@ namespace rabbitmq_consumer
         public static string QueueName = "rpc";
 
         private static Consumer _consumer;
-        
+
         static void Main(string[] args)
         {
             //create the consumer
-            using (_consumer = new Consumer(HostName, ExchangeName, QueueName))
-            {
+            _consumer = new Consumer(HostName, ExchangeName, QueueName);
 
-                //listen for message events
-                _consumer.OnMessageReceived += HandleMessage;
 
-                //start consuming
-                _consumer.StartConsuming();
-            }
+            //listen for message events
+            _consumer.OnMessageReceived += HandleMessage;
+
+            //start consuming
+            _consumer.StartConsuming();
         }
 
 
