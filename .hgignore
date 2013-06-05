@@ -1,0 +1,10 @@
+syntax: glob
+bin\
+obj\
+*\trace.log
+*.suo
+*.ReSharper.*
+_ReSharper.*
+*.user
+*.zip
+*.msi
