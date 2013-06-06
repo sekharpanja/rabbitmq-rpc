@@ -39,7 +39,7 @@ namespace rabbitmq.library
             Channel.ExchangeDeclare(exchangeName, ExchangeType.Direct);
 
             Channel.QueueDeclare(QueueName, false, false, false, null);
-            Channel.QueueBind(QueueName, ExchangeName, "rpc");
+            Channel.QueueBind(QueueName, ExchangeName, QueueName);
             subscription = new Subscription(Channel, QueueName);
         }
 
