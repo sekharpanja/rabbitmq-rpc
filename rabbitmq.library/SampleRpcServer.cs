@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using RabbitMQ.Client.MessagePatterns;
 
 namespace rabbitmq.library
@@ -10,28 +12,10 @@ namespace rabbitmq.library
         {
         }
 
-        //public override byte[] HandleCall(bool isRedelivered, RabbitMQ.Client.IBasicProperties requestProperties, byte[] body, out RabbitMQ.Client.IBasicProperties replyProperties)
-        //{
-        //    string message = Encoding.UTF8.GetString(body);
-        //    Console.WriteLine("message received {0}", message);
-        //    string responseMessage = string.Format("response:{0}", message);
-        //    byte[] responseBody = Encoding.UTF8.GetBytes(responseMessage);
-        //    return base.HandleCall(isRedelivered, requestProperties, responseBody, out replyProperties);
-        //}
-
-        //public override void ProcessRequest(RabbitMQ.Client.Events.BasicDeliverEventArgs evt)
-        //{
-        //    string message = Encoding.UTF8.GetString(evt.Body);
-        //    Console.WriteLine("message received {0}", message);
-        //    string responseMessage = string.Format("response:{0}", message);
-        //    byte[] responseBody = Encoding.UTF8.GetBytes(responseMessage);
-        //    evt.Body = Encoding.UTF8.GetBytes(responseMessage);
-        //    base.ProcessRequest(evt);
-        //}
-
-        public override byte[] HandleSimpleCall(bool isRedelivered, RabbitMQ.Client.IBasicProperties requestProperties, byte[] body, out RabbitMQ.Client.IBasicProperties replyProperties)
+        public override byte[] HandleSimpleCall(bool isRedelivered, IBasicProperties requestProperties, byte[] body, out IBasicProperties replyProperties)
         {
             replyProperties = requestProperties;
+            Console.WriteLine(replyProperties.ReplyTo);
             //replyProperties.MessageId = Guid.NewGuid().ToString();
 
             string message = Encoding.UTF8.GetString(body);
@@ -40,7 +24,72 @@ namespace rabbitmq.library
             byte[] responseBody = Encoding.UTF8.GetBytes(responseMessage);
 
             return responseBody;
-            //return base.HandleSimpleCall(isRedelivered, requestProperties, body, out replyProperties);
         }
+
+        public override void ProcessRequest(BasicDeliverEventArgs evt)
+        {
+            IBasicProperties properties = evt.BasicProperties;
+            if (!string.IsNullOrEmpty(properties.ReplyTo))
+            {
+                // It's a request.
+
+                PublicationAddress replyAddress = PublicationAddress.Parse(properties.ReplyTo);
+                if (replyAddress == null)
+                {
+                    replyAddress = new PublicationAddress(ExchangeType.Direct,
+                                                          "",
+                                                          properties.ReplyTo);
+                }
+
+                IBasicProperties replyProperties;
+                byte[] reply = HandleCall(evt.Redelivered,
+                                          properties,
+                                          evt.Body,
+                                          out replyProperties);
+                if (replyProperties == null)
+                {
+                    replyProperties = m_subscription.Model.CreateBasicProperties();
+                }
+
+                replyProperties.CorrelationId = properties.CorrelationId;
+                m_subscription.Model.BasicPublish(replyAddress,
+                                                  replyProperties,
+                                                  reply);
+            }
+            else
+            {
+                // It's an asynchronous message.
+                HandleCast(evt.Redelivered, properties, evt.Body);
+            }
+        }
+
+        //public override void ProcessRequest(BasicDeliverEventArgs evt)
+        //{
+        //    IBasicProperties properties = evt.BasicProperties;
+        //    if (!string.IsNullOrEmpty(properties.ReplyTo))
+        //    {
+        //        // It's a request.
+
+        //        PublicationAddress replyAddress = PublicationAddress.Parse(properties.ReplyTo) ??
+        //                                          new PublicationAddress(ExchangeType.Direct, "rpcExchange",
+        //                                                                 properties.ReplyTo);
+
+        //        IBasicProperties replyProperties;
+        //        byte[] reply = HandleCall(evt.Redelivered, properties, evt.Body, out replyProperties);
+        //        if (replyProperties == null)
+        //        {
+        //            replyProperties = m_subscription.Model.CreateBasicProperties();
+        //        }
+
+        //        replyProperties.CorrelationId = properties.CorrelationId;
+        //        m_subscription.Model.BasicPublish(replyAddress, replyProperties, reply);
+        //    }
+        //    else
+        //    {
+        //        // It's an asynchronous message.
+        //        HandleCast(evt.Redelivered, properties, evt.Body);
+        //    }
+        //}
+
     }
 }

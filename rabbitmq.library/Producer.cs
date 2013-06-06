@@ -12,6 +12,8 @@ namespace rabbitmq.library
         protected string ExchangeName;
         private string _replyQueueName;
         private SimpleRpcClient _client;
+        private string _onwardsRoutingKey = "rpc";
+        private string _returnRoutingKey = "rpc.reply";
 
         #region Constructors
 
@@ -23,16 +25,19 @@ namespace rabbitmq.library
             var connectionFactory = new ConnectionFactory
             {
                 HostName = hostName, //"localhost",
-                Port = 5672,
-                UserName = "guest",
-                Password = "guest",
-                VirtualHost = "/"
+                Port = AmqpTcpEndpoint.UseDefaultPort, //5672,
+                UserName = ConnectionFactory.DefaultUser,   //"guest"
+                Password = ConnectionFactory.DefaultPass,   //"guest"
+                VirtualHost = ConnectionFactory.DefaultVHost //"/"
             };
             Connection = connectionFactory.CreateConnection();
             Channel = Connection.CreateModel();
 
             Channel.ExchangeDeclare(exchangeName, ExchangeType.Direct);
 
+            _client = new SampleRpcClient(Channel, ExchangeName, ExchangeType.Direct, _onwardsRoutingKey) { TimeoutMilliseconds = 5000 };
+            _client.TimedOut += TimedOutHandler;
+            _client.Disconnected += DisconnectedHandler;
         }
 
         #endregion
@@ -41,16 +46,11 @@ namespace rabbitmq.library
 
         public byte[] Get(byte[] requestMessageBytes, string routingKey)
         {
-            _client = new SimpleRpcClient(Channel, ExchangeName, ExchangeType.Direct, "rpc");
-            _client.TimeoutMilliseconds = 5000; // defaults to infinity
-            _client.TimedOut += TimedOutHandler;
-            _client.Disconnected += DisconnectedHandler;
-
-            _replyQueueName = Channel.QueueDeclare("rpc-reply", true, false, false, null);
-            string corrId = Guid.NewGuid().ToString();
+            //_replyQueueName = Channel.QueueDeclare(_returnRoutingKey, false, false, false, null);
+            //string corrId = Guid.NewGuid().ToString();
             IBasicProperties props = Channel.CreateBasicProperties();
-            props.ReplyTo = _replyQueueName;
-            props.CorrelationId = corrId;
+            //props.ReplyTo = _replyQueueName;
+            //props.CorrelationId = corrId;
 
             IBasicProperties replyProp;
             var response = _client.Call(props, requestMessageBytes, out replyProp);
@@ -59,12 +59,14 @@ namespace rabbitmq.library
 
         private void DisconnectedHandler(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            Console.WriteLine("Disconnected event!");
         }
 
         private void TimedOutHandler(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            Console.WriteLine("reuqest timed out event!");
         }
 
         #endregion

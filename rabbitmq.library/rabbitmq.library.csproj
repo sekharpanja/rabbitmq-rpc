@@ -49,7 +49,9 @@
     <Compile Include="Consumer.cs" />
     <Compile Include="Producer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SampleRpcClient.cs" />
     <Compile Include="SampleRpcServer.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

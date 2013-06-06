@@ -6,7 +6,7 @@ namespace rabbitmq_producer
     class ProducerConsole
     {
         public static string HostName = "localhost";
-        public static string ExchangeName = "sampleExchange";
+        public static string ExchangeName = "rpcExchange";
 
         private static Producer _producer;
 
@@ -24,7 +24,8 @@ namespace rabbitmq_producer
                     break;
                 }
                 byte[] responseBytes = _producer.Get(System.Text.Encoding.UTF8.GetBytes(line), "rpc_test");
-                Console.WriteLine(System.Text.Encoding.UTF8.GetString(responseBytes));
+                if (responseBytes != null)
+                    Console.WriteLine(System.Text.Encoding.UTF8.GetString(responseBytes));
             }
         }
 

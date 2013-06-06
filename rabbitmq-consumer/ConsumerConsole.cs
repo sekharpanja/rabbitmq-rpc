@@ -8,7 +8,7 @@ namespace rabbitmq_consumer
     class ConsumerConsole
     {
         public static string HostName = "localhost";
-        public static string ExchangeName = "sampleExchange";
+        public static string ExchangeName = "rpcExchange";
         public static string QueueName = "rpc";
 
         private static Consumer _consumer;
