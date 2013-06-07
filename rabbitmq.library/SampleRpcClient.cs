@@ -7,21 +7,13 @@ namespace rabbitmq.library
 {
     public class SampleRpcClient : SimpleRpcClient
     {
-        public SampleRpcClient(IModel channel) : base(channel)
-        {
-        }
+        public SampleRpcClient(IModel channel) : base(channel) {}
 
-        public SampleRpcClient(IModel channel, string queueName) : base(channel, queueName)
-        {
-        }
+        public SampleRpcClient(IModel channel, string queueName) : base(channel, queueName) {}
 
-        public SampleRpcClient(IModel channel, string exchange, string exchangeType, string routingKey) : base(channel, exchange, exchangeType, routingKey)
-        {
-        }
+        public SampleRpcClient(IModel channel, string exchange, string exchangeType, string routingKey) : base(channel, exchange, exchangeType, routingKey) {}
 
-        public SampleRpcClient(IModel channel, PublicationAddress address) : base(channel, address)
-        {
-        }
+        public SampleRpcClient(IModel channel, PublicationAddress address) : base(channel, address) {}
 
         protected override void EnsureSubscription()
         {
