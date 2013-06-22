@@ -36,7 +36,7 @@ namespace rabbitmq.library
             Connection = connectionFactory.CreateConnection();
             Channel = Connection.CreateModel();
 
-            Channel.ExchangeDeclare(exchangeName, ExchangeType.Direct);
+            Channel.ExchangeDeclare(exchangeName, ExchangeType.Topic);
 
             Channel.QueueDeclare(QueueName, false, false, false, null);
             Channel.QueueBind(QueueName, ExchangeName, QueueName);
